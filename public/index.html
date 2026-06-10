@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecurePortal - Enterprise Login & Risk Console</title>
+    <title>SecurePortal - Advanced Identity & Risk Core</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -18,15 +18,25 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-app); color: var(--text-main); min-height: 100vh; font-size: calc(16px * var(--font-scale)); }
         
-        /* AUTH PAGE CONTAINER */
-        #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle, #EEF2FF 0%, #C7D2FE 100%); }
-        .auth-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        /* AUTHENTICATION wrapper */
+        #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle, #EEF2FF 0%, #C7D2FE 100%); padding: 1rem; }
+        .auth-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 460px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         .auth-card h2 { margin-bottom: 0.5rem; font-weight: 700; }
         .auth-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
 
-        /* PORTAL SYSTEM CONTAINER (Hidden by default) */
+        /* GOOGLE AUTH BUTTON */
+        .google-btn { background: #fff; color: #1f2937; border: 1px solid var(--border); padding: 0.65rem; border-radius: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; margin-bottom: 1.25rem; width: 100%; transition: background 0.2s; }
+        .google-btn:hover { background: #f9fafb; }
+        .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 1rem 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        /* MULTI-STEP WIZARD */
+        .auth-step { display: none; }
+        .auth-step.active { display: block; }
+
         #portal-container { display: none; min-height: 100vh; }
-        
         aside { width: 260px; background-color: var(--bg-sidebar); color: #f1f5f9; display: flex; flex-direction: column; padding: 1.5rem; border-right: 1px solid var(--border); }
         .brand { font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
         .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
@@ -48,7 +58,7 @@
 
         .form-group { margin-bottom: 1.25rem; text-align: left; }
         label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.85rem; }
-        select, input[type="email"], input[type="password"], input[type="range"] { width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--bg-card); color: var(--text-main); outline: none; }
+        select, input[type="text"], input[type="email"], input[type="password"], input[type="range"] { width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--bg-card); color: var(--text-main); outline: none; }
         button { width: 100%; background-color: var(--primary); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
         button:hover { background-color: var(--primary-hover); }
 
@@ -61,26 +71,78 @@
         .badge.high { background-color: var(--high); }
         .chart-frame { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
         .logout-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 0.4rem 0.8rem; font-size: 0.85rem; width: auto; margin-left: 1rem; }
-        .logout-btn:hover { background: #f1f5f9; color: var(--high); }
     </style>
 </head>
 <body>
 
     <div id="auth-container">
         <div class="auth-card">
-            <h2>SecurePortal Login</h2>
-            <p>Enter credentials to securely sync your enterprise risk data dashboard profiles.</p>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Corporate Email</label>
-                    <input type="email" id="authEmail" placeholder="yourname@company.com" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="authPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit">Sign In to Workspace</button>
-            </form>
+            
+            <div id="step-gateway" class="auth-step active">
+                <h2>Welcome to SecurePortal</h2>
+                <p>Select your authorized enterprise login mechanism.</p>
+                <button class="google-btn" onclick="handleGoogleSignIn()">
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18" alt="Google"> Continue with Google Workspace
+                </button>
+                <div class="divider">or use identity credentials</div>
+                <button style="margin-bottom:0.75rem;" onclick="showStep('login')">Sign In with Password</button>
+                <button style="background:transparent; color:var(--primary); border:1px solid var(--primary);" onclick="showStep('register')">Create Enterprise Account</button>
+            </div>
+
+            <div id="step-login" class="auth-step">
+                <h2>Sign In</h2>
+                <p>Enter your persistent credentials below.</p>
+                <form id="loginForm">
+                    <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+                    <button type="submit" style="margin-bottom:1rem;">Authenticate</button>
+                    <button type="button" style="background:none; color:var(--text-muted); font-size:0.85rem;" onclick="showStep('gateway')">← Back</button>
+                </form>
+            </div>
+
+            <div id="step-register" class="auth-step">
+    <h2>Create Account</h2>
+    <p>Provision a new cryptographic risk manager profile.</p>
+    <form id="registerForm">
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="regEmail" placeholder="name@company.com" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPassword" placeholder="Minimum 6 characters" required>
+        </div>
+        <button type="submit" style="margin-bottom: 1.25rem;">Sign Up & Continue</button>
+        
+        <div class="divider">Already have an account?</div>
+        
+        <button type="button" style="background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="showStep('login')">
+            Sign In with Existing Profile
+        </button>
+    </form>
+</div>
+
+            <div id="step-enrichment" class="auth-step">
+                <h2>Profile Optimization</h2>
+                <p>Complete basic context parameters for risk segregation mapping calculations.</p>
+                <form id="enrichmentForm">
+                    <div class="form-group"><label>Full Professional Name</label><input type="text" id="profName" required placeholder="John Doe"></div>
+                    <div class="form-group"><label>Enterprise Department / Role</label><select id="profRole"><option value="Risk Manager">Risk Manager / Analyst</option><option value="SecOps Administrator">SecOps Lead</option><option value="Compliance Auditor">Compliance Auditor</option></select></div>
+                    <button type="submit">Initialize Workstation</button>
+                </form>
+            </div>
+
+            <div id="step-mfa" class="auth-step">
+                <h2>Multi-Factor Authentication</h2>
+                <p id="mfaPrompt">Enter the secondary authorization code dispatched to your profile setup mapping block.</p>
+                <form id="mfaForm">
+                    <div class="form-group" style="text-align:center;">
+                        <input type="text" id="mfaCode" maxlength="6" style="font-size:1.75rem; letter-spacing:0.5rem; text-align:center; width:180px;" placeholder="000000" required>
+                    </div>
+                    <button type="submit" style="margin-top:1rem;">Verify Identity Code</button>
+                </form>
+            </div>
+
         </div>
     </div>
 
@@ -99,11 +161,8 @@
             <header>
                 <div><h2 id="view-title" style="font-weight: 700; font-size: 1.5rem;">User Dashboard (Dynamic)</h2></div>
                 <div class="user-profile">
-                    <div class="toggle-container">
-                        <label for="contrastToggle">High Contrast</label>
-                        <input type="checkbox" id="contrastToggle" onchange="toggleContrast(this)">
-                    </div>
-                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Loading identity profile...</span>
+                    <div class="toggle-container"><label for="contrastToggle">High Contrast</label><input type="checkbox" id="contrastToggle" onchange="toggleContrast(this)"></div>
+                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Resolving Profile Identity Matrix...</span>
                     <button class="logout-btn" onclick="triggerSignOut()">Log Out</button>
                 </div>
             </header>
@@ -111,25 +170,8 @@
             <div class="view-content">
                 <div id="view-dashboard" class="view-module active">
                     <div class="dashboard-grid">
-                        <div>
-                            <div class="card">
-                                <h3>Active System Risks Matrix</h3>
-                                <div class="chart-frame"><canvas id="radarChart"></canvas></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="card">
-                                <h3>Key Metrics</h3>
-                                <div style="margin: 1.5rem 0;">
-                                    <p style="color: var(--text-muted); font-size: 0.85rem;">Overall Risk Engine Score</p>
-                                    <h1 id="dash-score" style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">--</h1>
-                                </div>
-                                <div>
-                                    <p style="color: var(--text-muted); font-size: 0.85rem;">Accessibility–Security Balance Index</p>
-                                    <h2 id="dash-balance" style="font-weight: 700;">--</h2>
-                                </div>
-                            </div>
-                        </div>
+                        <div><div class="card"><h3>Active System Risks Matrix</h3><div class="chart-frame"><canvas id="radarChart"></canvas></div></div></div>
+                        <div><div class="card"><h3>Key Metrics</h3><div style="margin: 1.5rem 0;"><p style="color: var(--text-muted); font-size: 0.85rem;">Overall Risk Engine Score</p><h1 id="dash-score" style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">--</h1></div><div><p style="color: var(--text-muted); font-size: 0.85rem;">Accessibility–Security Balance Index</p><h2 id="dash-balance" style="font-weight: 700;">--</h2></div></div></div>
                     </div>
                 </div>
 
@@ -138,7 +180,7 @@
                         <h2>Execute Framework Parameters Engine</h2>
                         <form id="metricsForm">
                             <div class="form-group"><label>Portal Type</label><select id="portalType"><option value="1">Corporate Intranet</option><option value="2">Hybrid Portal</option><option value="3">Public Portal</option></select></div>
-                            <div class="form-group"><label>Authentication Method</label><select id="authMethod"><option value="1">SSO Enforced</option><option value="2">MFA Enforced</option><option value="3">Single-Factor (Password)</option></select></div>
+                            <div class="form-group"><label>Authentication Method</label><select id="authMethod"><option value="1">SSO Enforced</option><option value="2">MFA Enforced</option><option value="3">Single-Factor</option></select></div>
                             <div class="form-group"><label>User Access Authorization</label><select id="accessLevels"><option value="1">Flat Schema</option><option value="2">Role-Based (RBAC)</option><option value="3">Attribute-Based (ABAC)</option></select></div>
                             <div class="form-group"><label>Content Evolution Rate</label><select id="updateFrequency"><option value="1">Static State Framework</option><option value="2">Daily Updates</option><option value="3">Real-time Asynchronous UGC</option></select></div>
                             <div class="form-group"><label>Data Sensitivity Classification</label><select id="dataSensitivity"><option value="1">Public Core Assets</option><option value="2">Internal Proprietary</option><option value="3">Restricted PII Fields</option></select></div>
@@ -161,12 +203,8 @@
                     <div class="card">
                         <h3>Your Secure Workspace Diagnostic Log Stream</h3>
                         <table>
-                            <thead>
-                                <tr><th>Execution Timestamp</th><th>Aggregate Assessment Score</th><th>Risk Allocation Rating</th><th>Balance Equilibrium Index</th></tr>
-                            </thead>
-                            <tbody id="cloudLogsTable">
-                                <tr><td colspan="4" style="color: var(--text-muted);">Awaiting network authorization pipeline sync...</td></tr>
-                            </tbody>
+                            <thead><tr><th>Execution Timestamp</th><th>Aggregate Assessment Score</th><th>Risk Allocation Rating</th><th>Balance Equilibrium Index</th></tr></thead>
+                            <tbody id="cloudLogsTable"><tr><td colspan="4" style="color: var(--text-muted);">Awaiting network authorization pipeline sync...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -174,10 +212,7 @@
                 <div id="view-accessibility" class="view-module">
                     <div class="card" style="max-width: 600px;">
                         <h2>Interactive Accessibility Configurations</h2>
-                        <div class="form-group">
-                            <label>Dynamic Interface Display Text Scale</label>
-                            <input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler" oninput="adjustTextScale(this.value)">
-                        </div>
+                        <div class="form-group"><label>Dynamic Interface Display Text Scale</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler" oninput="adjustTextScale(this.value)"></div>
                     </div>
                 </div>
             </div>
