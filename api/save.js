@@ -12,20 +12,14 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
+    if (req.method !== 'POST') return res.status(405).end();
     try {
-        // Intercept Authorization Token header 
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized Access Error' });
-        
-        const token = authHeader.split('Bearer ')[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid; // Extract unique authenticated User ID
+        const token = req.headers.authorization.split('Bearer ')[1];
+        const decoded = await admin.auth().verifyIdToken(token);
+        const userId = decoded.uid;
 
         const input = req.body;
 
-        // Scoring Logic (same configuration metrics as before)
         let securityRisk = (input.dataSensitivity * 3) + (input.authMethod * 2) + (input.portalType * 2);
         if (input.controls.waf) securityRisk -= 1.5;
         if (input.controls.encryption) securityRisk -= 1.5;
@@ -49,14 +43,11 @@ export default async function handler(req, res) {
         balanceScore = Math.round(Math.max(10, Math.min(100, balanceScore)));
 
         const calculatedMetrics = {
-            userId, // Link this specific run document explicitly to this logged-in User ID!
-            overallScore, tier, securityRisk, maintainabilityRisk, accessibilityRisk, exposureRisk, balanceIndex: balanceScore,
+            userId, overallScore, tier, securityRisk, maintainabilityRisk, accessibilityRisk, exposureRisk, balanceIndex: balanceScore,
             createdAt: new Date().toISOString()
         };
 
         await db.collection('assessments').add(calculatedMetrics);
         return res.status(200).json(calculatedMetrics);
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
+    } catch (error) { return res.status(500).json({ error: error.message }); }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecurePortal - Advanced Identity & Risk Core</title>
+    <title>SecurePortal - Strategic Risk Management Console</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -18,21 +18,18 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-app); color: var(--text-main); min-height: 100vh; font-size: calc(16px * var(--font-scale)); }
         
-        /* AUTHENTICATION wrapper */
         #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle, #EEF2FF 0%, #C7D2FE 100%); padding: 1rem; }
         .auth-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 460px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         .auth-card h2 { margin-bottom: 0.5rem; font-weight: 700; }
         .auth-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
 
-        /* GOOGLE AUTH BUTTON */
-        .google-btn { background: #fff; color: #1f2937; border: 1px solid var(--border); padding: 0.65rem; border-radius: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; margin-bottom: 1.25rem; width: 100%; transition: background 0.2s; }
+        .google-btn { background: #fff; color: #1f2937; border: 1px solid var(--border); padding: 0.65rem; border-radius: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; margin-bottom: 1.25rem; width: 100%; }
         .google-btn:hover { background: #f9fafb; }
         .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 1rem 0; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
         .divider:not(:empty)::before { margin-right: .5em; }
         .divider:not(:empty)::after { margin-left: .5em; }
 
-        /* MULTI-STEP WIZARD */
         .auth-step { display: none; }
         .auth-step.active { display: block; }
 
@@ -81,50 +78,40 @@
             <div id="step-gateway" class="auth-step active">
                 <h2>Welcome to SecurePortal</h2>
                 <p>Select your authorized enterprise login mechanism.</p>
-                <button class="google-btn" onclick="handleGoogleSignIn()">
+                <button class="google-btn" id="btn-google-login">
                     <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18" alt="Google"> Continue with Google Workspace
                 </button>
                 <div class="divider">or use identity credentials</div>
-                <button style="margin-bottom:0.75rem;" onclick="showStep('login')">Sign In with Password</button>
-                <button style="background:transparent; color:var(--primary); border:1px solid var(--primary);" onclick="showStep('register')">Create Enterprise Account</button>
+                <button style="margin-bottom:0.75rem;" id="to-login-btn">Sign In with Password</button>
+                <button style="background:transparent; color:var(--primary); border:1px solid var(--primary);" id="to-register-btn">Create Enterprise Account</button>
             </div>
 
             <div id="step-login" class="auth-step">
                 <h2>Sign In</h2>
-                <p>Enter your persistent credentials below.</p>
+                <p>Enter your credentials below.</p>
                 <form id="loginForm">
                     <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" required></div>
                     <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
                     <button type="submit" style="margin-bottom:1rem;">Authenticate</button>
-                    <button type="button" style="background:none; color:var(--text-muted); font-size:0.85rem;" onclick="showStep('gateway')">← Back</button>
+                    <button type="button" class="back-to-gateway" style="background:none; color:var(--text-muted); font-size:0.85rem;">← Back</button>
                 </form>
             </div>
 
             <div id="step-register" class="auth-step">
-    <h2>Create Account</h2>
-    <p>Provision a new cryptographic risk manager profile.</p>
-    <form id="registerForm">
-        <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="regEmail" placeholder="name@company.com" required>
-        </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="regPassword" placeholder="Minimum 6 characters" required>
-        </div>
-        <button type="submit" style="margin-bottom: 1.25rem;">Sign Up & Continue</button>
-        
-        <div class="divider">Already have an account?</div>
-        
-        <button type="button" style="background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="showStep('login')">
-            Sign In with Existing Profile
-        </button>
-    </form>
-</div>
+                <h2>Create Account</h2>
+                <p>Provision a new cryptographic risk manager profile.</p>
+                <form id="registerForm">
+                    <div class="form-group"><label>Email Address</label><input type="email" id="regEmail" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="regPassword" required></div>
+                    <button type="submit" style="margin-bottom:1rem;">Sign Up & Continue</button>
+                    <div class="divider">Already have an account?</div>
+                    <button type="button" class="to-login-toggle" style="background:transparent; color:var(--primary); border:1px solid var(--primary);">Sign In with Existing Profile</button>
+                </form>
+            </div>
 
             <div id="step-enrichment" class="auth-step">
                 <h2>Profile Optimization</h2>
-                <p>Complete basic context parameters for risk segregation mapping calculations.</p>
+                <p>Complete workspace context parameters.</p>
                 <form id="enrichmentForm">
                     <div class="form-group"><label>Full Professional Name</label><input type="text" id="profName" required placeholder="John Doe"></div>
                     <div class="form-group"><label>Enterprise Department / Role</label><select id="profRole"><option value="Risk Manager">Risk Manager / Analyst</option><option value="SecOps Administrator">SecOps Lead</option><option value="Compliance Auditor">Compliance Auditor</option></select></div>
@@ -134,7 +121,7 @@
 
             <div id="step-mfa" class="auth-step">
                 <h2>Multi-Factor Authentication</h2>
-                <p id="mfaPrompt">Enter the secondary authorization code dispatched to your profile setup mapping block.</p>
+                <p id="mfaPrompt">Enter the secondary verification token.</p>
                 <form id="mfaForm">
                     <div class="form-group" style="text-align:center;">
                         <input type="text" id="mfaCode" maxlength="6" style="font-size:1.75rem; letter-spacing:0.5rem; text-align:center; width:180px;" placeholder="000000" required>
@@ -146,14 +133,14 @@
         </div>
     </div>
 
-    <div id="portal-container" style="display: flex; width: 100%;">
+    <div id="portal-container">
         <aside>
             <div class="brand">🛡️ SecurePortal</div>
             <ul class="nav-links">
-                <li class="nav-item active" onclick="switchView('dashboard')">Dashboard</li>
-                <li class="nav-item" onclick="switchView('risk-engine')">Risk Assessment</li>
-                <li class="nav-item" onclick="switchView('audit-logs')">Security Audits</li>
-                <li class="nav-item" onclick="switchView('accessibility')">Accessibility Suite</li>
+                <li class="nav-item active" data-view="dashboard">Dashboard</li>
+                <li class="nav-item" data-view="risk-engine">Risk Assessment</li>
+                <li class="nav-item" data-view="audit-logs">Security Audits</li>
+                <li class="nav-item" data-view="accessibility">Accessibility Suite</li>
             </ul>
         </aside>
 
@@ -161,9 +148,9 @@
             <header>
                 <div><h2 id="view-title" style="font-weight: 700; font-size: 1.5rem;">User Dashboard (Dynamic)</h2></div>
                 <div class="user-profile">
-                    <div class="toggle-container"><label for="contrastToggle">High Contrast</label><input type="checkbox" id="contrastToggle" onchange="toggleContrast(this)"></div>
-                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Resolving Profile Identity Matrix...</span>
-                    <button class="logout-btn" onclick="triggerSignOut()">Log Out</button>
+                    <div class="toggle-container"><label for="contrastToggle">High Contrast</label><input type="checkbox" id="contrastToggle"></div>
+                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Resolving Identity Profile...</span>
+                    <button class="logout-btn" id="logoutBtn">Log Out</button>
                 </div>
             </header>
 
@@ -194,7 +181,7 @@
                                     <label style="font-weight:normal;"><input type="checkbox" id="encryption"> Transparent Table Encryption (TDE)</label>
                                 </div>
                             </div>
-                            <button type="button" onclick="submitAssessmentData()">Run Diagnostics & Save</button>
+                            <button type="button" id="executeDiagnosticsBtn">Run Diagnostics & Save</button>
                         </form>
                     </div>
                 </div>
@@ -212,7 +199,7 @@
                 <div id="view-accessibility" class="view-module">
                     <div class="card" style="max-width: 600px;">
                         <h2>Interactive Accessibility Configurations</h2>
-                        <div class="form-group"><label>Dynamic Interface Display Text Scale</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler" oninput="adjustTextScale(this.value)"></div>
+                        <div class="form-group"><label>Dynamic Interface Display Text Scale</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler"></div>
                     </div>
                 </div>
             </div>

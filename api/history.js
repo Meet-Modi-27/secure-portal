@@ -12,28 +12,18 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export default async function handler(req, res) {
-    if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
-
+    if (req.method !== 'GET') return res.status(405).end();
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized Access Error' });
+        const token = req.headers.authorization.split('Bearer ')[1];
+        const decoded = await admin.auth().verifyIdToken(token);
         
-        const token = authHeader.split('Bearer ')[1];
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const userId = decodedToken.uid;
-
-        // Query Firestore collection using WHERE clause to filter only this user's data records!
         const snapshot = await db.collection('assessments')
-                                 .where('userId', '==', userId)
+                                 .where('userId', '==', decoded.uid)
                                  .orderBy('createdAt', 'desc')
                                  .limit(10)
                                  .get();
         const history = [];
-        snapshot.forEach(doc => {
-            history.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach(doc => { history.push({ id: doc.id, ...doc.data() }); });
         return res.status(200).json(history);
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
+    } catch (error) { return res.status(500).json({ error: error.message }); }
 }
