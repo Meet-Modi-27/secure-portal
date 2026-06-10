@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePortal - Strategic Risk Management Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --bg-sidebar: #0f172a;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --border: #e2e8f0;
+            --low: #22c55e;
+            --medium: #eab308;
+            --high: #ef4444;
+            --font-scale: 1;
+        }
+
+        [data-theme="high-contrast"] {
+            --bg-app: #000000;
+            --bg-sidebar: #000000;
+            --bg-card: #111111;
+            --text-main: #ffffff;
+            --text-muted: #ffff00;
+            --primary: #ffff00;
+            --border: #ffffff;
+            --low: #00ff00;
+            --medium: #ffff00;
+            --high: #ff0000;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg-app); 
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            font-size: calc(16px * var(--font-scale));
+        }
+
+        aside {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            color: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-right: 1px solid var(--border);
+        }
+        .brand { font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-item { padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; color: #94a3b8; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: #fff; }
+        [data-theme="high-contrast"] .nav-item.active { border: 2px solid #ffff00; color: #ffff00; }
+
+        main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        header { background-color: var(--bg-card); padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .user-profile { display: flex; align-items: center; gap: 1rem; }
+        .toggle-container { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; }
+
+        .view-content { padding: 2rem; flex: 1; overflow-y: auto; }
+        .view-module { display: none; }
+        .view-module.active { display: block; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1.2fr 1fr; } }
+
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.85rem; }
+        select, input[type="range"] { width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--bg-card); color: var(--text-main); }
+        button { background-color: var(--primary); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        button:hover { background-color: var(--primary-hover); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: left; }
+        th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { font-weight: 600; color: var(--text-muted); }
+
+        .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; }
+        .badge.low { background-color: var(--low); }
+        .badge.medium { background-color: var(--medium); color: #000; }
+        .badge.high { background-color: var(--high); }
+        .chart-frame { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="brand">🛡️ SecurePortal</div>
+        <ul class="nav-links">
+            <li class="nav-item active" onclick="switchView('dashboard')">Dashboard</li>
+            <li class="nav-item" onclick="switchView('risk-engine')">Risk Assessment</li>
+            <li class="nav-item" onclick="switchView('audit-logs')">Security Audits</li>
+            <li class="nav-item" onclick="switchView('accessibility')">Accessibility Suite</li>
+        </ul>
+    </aside>
+
+    <main>
+        <header>
+            <div><h2 id="view-title" style="font-weight: 700; font-size: 1.5rem;">User Dashboard (Dynamic)</h2></div>
+            <div class="user-profile">
+                <div class="toggle-container">
+                    <label for="contrastToggle">High Contrast</label>
+                    <input type="checkbox" id="contrastToggle" onchange="toggleContrast(this)">
+                </div>
+                <span style="font-size: 0.9rem; font-weight: 500;">John Doe (Risk Manager)</span>
+            </div>
+        </header>
+
+        <div class="view-content">
+            <div id="view-dashboard" class="view-module active">
+                <div class="dashboard-grid">
+                    <div>
+                        <div class="card">
+                            <h3>Active System Risks Matrix</h3>
+                            <div class="chart-frame"><canvas id="radarChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card">
+                            <h3>Key Metrics</h3>
+                            <div style="margin: 1.5rem 0;">
+                                <p style="color: var(--text-muted); font-size: 0.85rem;">Overall Risk Engine Score</p>
+                                <h1 id="dash-score" style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">--</h1>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-muted); font-size: 0.85rem;">Accessibility–Security Balance Index</p>
+                                <h2 id="dash-balance" style="font-weight: 700;">--</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-risk-engine" class="view-module">
+                <div class="card" style="max-width: 700px; margin: 0 auto;">
+                    <h2>Execute Framework Parameters Engine</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Map target technical architectural parameters directly against metric compliance constraints.</p>
+                    <form id="metricsForm">
+                        <div class="form-group"><label>Portal Type</label><select id="portalType"><option value="1">Corporate Intranet (Internal)</option><option value="2">Hybrid Portal (Partners)</option><option value="3">Public Portal (World-Facing)</option></select></div>
+                        <div class="form-group"><label>Authentication Method</label><select id="authMethod"><option value="1">SSO Enforced</option><option value="2">Multi-Factor Authentication (MFA)</option><option value="3">Single-Factor (Password Only)</option></select></div>
+                        <div class="form-group"><label>User Access Authorization Model</label><select id="accessLevels"><option value="1">Flat Schema (Unrestricted)</option><option value="2">Role-Based Controls (RBAC)</option><option value="3">Attribute Controls (ABAC)</option></select></div>
+                        <div class="form-group"><label>Content Evolution Rate</label><select id="updateFrequency"><option value="1">Static State Framework</option><option value="2">Daily / Weekly Deployments</option><option value="3">Real-time Asynchronous UGC</option></select></div>
+                        <div class="form-group"><label>Data Sensitivity Classification</label><select id="dataSensitivity"><option value="1">Public Core Assets</option><option value="2">Internal Proprietary Metadata</option><option value="3">Restricted PII Fields / Financial Tables</option></select></div>
+                        <div class="form-group"><label>Patch Pipeline Recurrence</label><select id="patchManagement"><option value="1">Continuous DevSecOps Pipelines</option><option value="2">Scheduled Monthly Windows</option><option value="3">Ad-hoc Patch Cycles</option></select></div>
+                        <div class="form-group"><label>Accessibility Compliance Targets</label><select id="wcagLevel"><option value="1">WCAG 2.1 AAA Tier</option><option value="2">WCAG 2.1 AA Tier</option><option value="3">WCAG 2.1 A Tier / Vulnerable State</option></select></div>
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label style="margin-bottom: 0.5rem;">Active Perimeter Hardening Controls</label>
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <label style="font-weight:normal;"><input type="checkbox" id="waf" checked> Web Application Firewall (WAF)</label>
+                                <label style="font-weight:normal;"><input type="checkbox" id="logging" checked> Immutable Audit Logging Tracks</label>
+                                <label style="font-weight:normal;"><input type="checkbox" id="encryption"> Transparent Table Encryption (TDE)</label>
+                            </div>
+                        </div>
+                        <button type="button" onclick="submitAssessmentData()">Run Diagnostics & Save</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="view-audit-logs" class="view-module">
+                <div class="card">
+                    <h3>Historic Risk Analysis Stream (Cloud Logs)</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Execution Timestamp</th><th>Aggregate Assessment Score</th><th>Risk Allocation Rating</th><th>Balance Equilibrium Index</th></tr>
+                        </thead>
+                        <tbody id="cloudLogsTable">
+                            <tr><td colspan="4" style="color: var(--text-muted);">Awaiting network streams pipeline sync...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-accessibility" class="view-module">
+                <div class="card" style="max-width: 600px;">
+                    <h2>Interactive Accessibility Configurations</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;">Dynamically alter view models and execution bounds across UI layout layers.</p>
+                    <div class="form-group">
+                        <label>Dynamic Interface Display Text Scale</label>
+                        <input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler" oninput="adjustTextScale(this.value)">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:600; margin-top:0.25rem;"><span>Compact (80%)</span><span>Standard (100%)</span><span>Enlarged (140%)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
