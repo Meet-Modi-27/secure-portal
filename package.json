@@ -1,0 +1,16 @@
+{
+  "name": "secure-portal",
+  "version": "1.0.0",
+  "description": "Secure Portal",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "firebase": "^12.14.0",
+    "firebase-admin": "^14.0.0"
+  }
+}
