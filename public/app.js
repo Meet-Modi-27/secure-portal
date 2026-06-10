@@ -3,12 +3,13 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from
 
 // !!! paste your exact Client Web Config keys from the Firebase console here
 const firebaseConfig = {
-    apiKey: "YOUR_WEB_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAz4zQlpi2EtSLxy7Jn9l8g5B7sXvWJC9U",
+  authDomain: "portal-d381d.firebaseapp.com",
+  projectId: "portal-d381d",
+  storageBucket: "portal-d381d.firebasestorage.app",
+  messagingSenderId: "170157556781",
+  appId: "1:170157556781:web:3edb29d7872c73fb29e4a4",
+  measurementId: "G-KK2D0VRPFG"
 };
 
 const app = initializeApp(firebaseConfig);
