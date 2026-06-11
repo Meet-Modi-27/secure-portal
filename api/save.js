@@ -1,11 +1,19 @@
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
+// Copy and paste this exact block at the top of your API files
+if (!admin.apps || admin.apps.length === 0) {
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    
+    // Local Windows environments sometimes double-escape newlines. This cleans them up!
+    if (privateKey && privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            privateKey: privateKey
         })
     });
 }
@@ -17,7 +25,6 @@ export default async function handler(req, res) {
         const token = req.headers.authorization.split('Bearer ')[1];
         const decoded = await admin.auth().verifyIdToken(token);
         const userId = decoded.uid;
-
         const input = req.body;
 
         let securityRisk = (input.dataSensitivity * 3) + (input.authMethod * 2) + (input.portalType * 2);

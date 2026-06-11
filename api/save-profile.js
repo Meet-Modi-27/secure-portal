@@ -17,10 +17,12 @@ export default async function handler(req, res) {
         const token = req.headers.authorization.split('Bearer ')[1];
         const decoded = await admin.auth().verifyIdToken(token);
         
+        // Lock down default fields explicitly
         await db.collection('users').doc(decoded.uid).set({
             name: req.body.name,
             role: req.body.role,
-            initialized: true
+            initialized: true,
+            twoFactorEnabled: false // This forces the QR generator step to trigger!
         });
         return res.status(200).json({ success: true });
     } catch (err) { return res.status(500).json({ error: err.message }); }
