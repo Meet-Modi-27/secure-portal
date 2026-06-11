@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// !!! PASTE YOUR REAL WEBA CONFIG FROM THE FIREBASE CONSOLE HERE
+// !!! REPLACE WITH YOUR REAL FIREBASE KEY CONSOLE OBJECT MAP !!!
 const firebaseConfig = {
   apiKey: "AIzaSyAz4zQlpi2EtSLxy7Jn9l8g5B7sXvWJC9U",
   authDomain: "portal-d381d.firebaseapp.com",
@@ -20,18 +20,35 @@ let radarChartInstance = null;
 let activeUserToken = null;
 let pendingUserContext = null; 
 
+// Linear stack array to handle structural step trace rewinds cleanly
+let navigationHistoryStack = [];
+let currentActiveStep = "gateway";
+
 const viewTitles = {
-    'dashboard': 'User Dashboard (Dynamic)',
-    'risk-engine': 'Risk Management Module (Interactive)',
-    'audit-logs': 'Security Monitoring (Real-time Logs)',
-    'accessibility': 'Accessibility Settings (Interactive)'
+    'dashboard': 'User Dashboard (Framework Metric Summary)',
+    'risk-engine': 'Simulation Control Deck (Interactive Parameter Testing)',
+    'audit-logs': 'Security Audit Monitoring (Historical Run Storage)',
+    'accessibility': 'Accessibility Display Configurations'
 };
 
-// 1. STABLE ACCESSIBILITY LAYER WIRE UP
-function showStep(stepName) {
+function showStep(stepName, isGoingBack = false) {
+    if (!isGoingBack && stepName !== currentActiveStep) {
+        navigationHistoryStack.push(currentActiveStep);
+    }
+    
     document.querySelectorAll('.auth-step').forEach(step => step.classList.remove('active'));
     const targetedStep = document.getElementById(`step-${stepName}`);
-    if (targetedStep) targetedStep.classList.add('active');
+    if (targetedStep) {
+        targetedStep.classList.add('active');
+        currentActiveStep = stepName;
+    }
+}
+
+function handleGoBack() {
+    if (navigationHistoryStack.length > 0) {
+        const previousStep = navigationHistoryStack.pop();
+        showStep(previousStep, true);
+    }
 }
 
 function switchView(targetViewId) {
@@ -48,30 +65,74 @@ function switchView(targetViewId) {
     if (targetViewId === 'audit-logs' || targetViewId === 'dashboard') fetchCloudAssessmentLogs();
 }
 
-// 2. CENTRALIZED EVENT CAPTURE LAYER (Bypasses Module-isolation bounds cleanly)
+// SECURE WATCHER INTERCEPTOR
+onAuthStateChanged(auth, async (user) => {
+    const authBox = document.getElementById('auth-container');
+    const portalBox = document.getElementById('portal-container');
+
+    if (user) {
+        activeUserToken = await user.getIdToken();
+        pendingUserContext = user;
+        
+        try {
+            const res = await fetch('/api/get-profile', { headers: { 'Authorization': `Bearer ${activeUserToken}` } });
+            const profile = await res.json();
+
+            if (!profile || profile.initialized === false) {
+                showStep('enrichment');
+            } else if (profile.twoFactorConfigured === undefined) {
+                // Profile matches metadata records but has not selected a 2FA option yet
+                showStep('mfa-choice');
+            } else {
+                authBox.style.display = 'none';
+                portalBox.style.display = 'flex';
+                document.getElementById('userDisplayName').innerText = `Workspace Auditor: ${profile.name}`;
+                fetchCloudAssessmentLogs();
+                switchView('dashboard');
+            }
+        } catch (err) {
+            showStep('enrichment');
+        }
+    } else {
+        activeUserToken = null;
+        pendingUserContext = null;
+        navigationHistoryStack = [];
+        currentActiveStep = "gateway";
+        authBox.style.display = 'flex';
+        portalBox.style.display = 'none';
+        showStep('gateway');
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Auth Multi-step routing path toggles
+    // Navigation Action Bindings
     document.getElementById('to-login-btn')?.addEventListener('click', () => showStep('login'));
     document.getElementById('to-register-btn')?.addEventListener('click', () => showStep('register'));
-    document.querySelectorAll('.back-to-gateway').forEach(btn => btn.addEventListener('click', () => showStep('gateway')));
+    
+    document.querySelectorAll('.nav-back-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleGoBack();
+        });
+    });
+
     document.querySelectorAll('.to-login-toggle').forEach(btn => btn.addEventListener('click', () => showStep('login')));
-    
-    // Auth submission blocks
     document.getElementById('btn-google-login')?.addEventListener('click', handleGoogleSignIn);
+    document.getElementById('logoutBtn')?.addEventListener('click', () => signOut(auth));
     
+    // Form Action Submit Interceptors
     document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
             await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
-        } catch (err) { alert("Auth Failure: " + err.message); }
+        } catch (err) { alert("Credentials validation failure: " + err.message); }
     });
 
     document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
             await createUserWithEmailAndPassword(auth, document.getElementById('regEmail').value, document.getElementById('regPassword').value);
-        } catch (err) { alert("Registration Failure: " + err.message); }
+        } catch (err) { alert("Profile assignment error: " + err.message); }
     });
 
     document.getElementById('enrichmentForm')?.addEventListener('submit', async (e) => {
@@ -86,36 +147,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${activeUserToken}` },
                 body: JSON.stringify(profilePayload)
             });
-            document.getElementById('mfaPrompt').innerText = `Enter verification token to initialize workspace metrics for ${profilePayload.name}.`;
-            showStep('mfa');
-        } catch (err) { alert("Failed initializing profile metadata logs."); }
+            showStep('mfa-choice');
+        } catch (err) { alert("Failed updating metadata mapping records."); }
     });
 
-    document.getElementById('mfaForm')?.addEventListener('submit', (e) => {
+    // MFA STEP CONDITIONAL BRANCHES
+    document.getElementById('mfa-opt-in')?.addEventListener('click', async () => {
+        try {
+            const setupRes = await fetch('/api/generate-2fa', { headers: { 'Authorization': `Bearer ${activeUserToken}` } });
+            const setupData = await setupRes.json();
+            
+            document.getElementById('mfaQrImage').setAttribute('src', setupData.qrCodeUrl);
+            document.getElementById('mfaManualKey').innerText = setupData.secret;
+            showStep('mfa-verify');
+        } catch (err) { alert("Cryptographic generation exception encountered."); }
+    });
+
+    document.getElementById('mfa-opt-out')?.addEventListener('click', async () => {
+        try {
+            // Write a parameter bypass configuration flag straight down to your Firestore collection
+            await fetch('/api/verify-2fa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${activeUserToken}` },
+                body: JSON.stringify({ skipMfa: true })
+            });
+            window.location.reload();
+        } catch (err) { alert("Failed updating workspace settings profiles."); }
+    });
+
+    document.getElementById('mfaForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = document.getElementById('mfaCode').value;
-        if(code.length === 6) {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('portal-container').style.display = 'flex';
-            document.getElementById('userDisplayName').innerText = `Active Context: ${pendingUserContext.email}`;
-            fetchCloudAssessmentLogs();
-            switchView('dashboard');
-        } else {
-            alert("Invalid verification parameters.");
-        }
+        try {
+            const res = await fetch('/api/verify-2fa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${activeUserToken}` },
+                body: JSON.stringify({ code: document.getElementById('mfaCode').value })
+            });
+            const status = await res.json();
+            if (status.success) { window.location.reload(); } 
+            else { alert(status.error || "MFA validation sequence rejected."); }
+        } catch (err) { alert("Handshake verification error."); }
     });
 
-    document.getElementById('logoutBtn')?.addEventListener('click', () => signOut(auth));
-
-    // Sidebar View Navigation Swapping Listeners
+    // SIDEBAR NAVIGATION AND STYLING SUITE
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             const targetView = e.target.getAttribute('data-view');
-            if(targetView) switchView(targetView);
+            if (targetView) switchView(targetView);
         });
     });
 
-    // Display configurations modifiers
     document.getElementById('contrastToggle')?.addEventListener('change', (e) => {
         document.documentElement.setAttribute('data-theme', e.target.checked ? 'high-contrast' : 'light');
     });
@@ -125,43 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('executeDiagnosticsBtn')?.addEventListener('click', submitAssessmentData);
-});
-
-// 3. SECURE ASYNCHRONOUS AUTH TRACKING HOOKS
-onAuthStateChanged(auth, async (user) => {
-    const authBox = document.getElementById('auth-container');
-    const portalBox = document.getElementById('portal-container');
-
-    if (user) {
-        activeUserToken = await user.getIdToken();
-        pendingUserContext = user;
-        
-        try {
-            const res = await fetch('/api/get-profile', {
-                headers: { 'Authorization': `Bearer ${activeUserToken}` }
-            });
-            const profile = await res.json();
-
-            if (!profile.initialized) {
-                showStep('enrichment');
-            } else {
-                document.getElementById('mfaPrompt').innerText = `Enter token to verify workspace connection for ${profile.name} (${profile.role}).`;
-                showStep('mfa');
-            }
-        } catch (err) {
-            showStep('enrichment');
-        }
-    } else {
-        activeUserToken = null;
-        pendingUserContext = null;
-        authBox.style.display = 'flex';
-        portalBox.style.display = 'none';
-        showStep('gateway');
-    }
+    document.getElementById('exportPdfBtn')?.addEventListener('click', handlePdfExportReport);
 });
 
 async function handleGoogleSignIn() {
-    try { await signInWithPopup(auth, googleProvider); } catch (err) { alert("Google Auth Failure: " + err.message); }
+    try { await signInWithPopup(auth, googleProvider); } catch (err) { alert("Google Handshake Refused: " + err.message); }
 }
 
 async function submitAssessmentData() {
@@ -195,24 +244,66 @@ async function fetchCloudAssessmentLogs() {
     const logs = await res.json();
     const tableBody = document.getElementById('cloudLogsTable');
     if (!logs || logs.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No records run for your profile block yet.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No simulations stored. Run calculations inside the Simulation Deck.</td></tr>`;
         return;
     }
-    tableBody.innerHTML = logs.map(run => `<tr><td>${new Date(run.createdAt).toLocaleString()}</td><td style="font-weight:600;">${run.overallScore.toFixed(2)} / 10</td><td><span class="badge ${run.tier.toLowerCase()}">${run.tier}</span></td><td style="font-weight:600;">${run.balanceIndex} / 100</td></tr>`).join('');
-    if(logs.length > 0) renderDashboardVisuals(logs[0]);
+    tableBody.innerHTML = logs.map(run => `<tr><td>${new Date(run.createdAt).toLocaleString()}</td><td style="font-weight:600;">${run.overallScore.toFixed(2)} / 10</td><td><span class="badge ${run.tier.toLowerCase()}">${run.tier} Risk</span></td><td style="font-weight:600;">${run.balanceIndex} / 100</td></tr>`).join('');
+    if (logs.length > 0) renderDashboardVisuals(logs[0]);
 }
 
 function renderDashboardVisuals(metrics) {
     document.getElementById('dash-score').innerText = `${metrics.overallScore.toFixed(1)} / 10`;
     document.getElementById('dash-balance').innerText = `${metrics.balanceIndex} / 100`;
+    
+    const badge = document.getElementById('dash-tier-badge');
+    if (badge) {
+        badge.innerText = `${metrics.tier} Risk Tier`;
+        badge.className = `badge ${metrics.tier.toLowerCase()}`;
+    }
+
     const ctx = document.getElementById('radarChart').getContext('2d');
     if (radarChartInstance) radarChartInstance.destroy();
+
+    const isHighContrast = document.documentElement.getAttribute('data-theme') === 'high-contrast';
     radarChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Security Risk', 'Maintainability', 'Accessibility Gap', 'Exposure Profile'],
-            datasets: [{ label: 'Metric Context Matrix', data: [metrics.securityRisk, metrics.maintainabilityRisk, metrics.accessibilityRisk, metrics.exposureRisk], backgroundColor: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', borderWidth: 2 }]
+            labels: ['Data Integrity Risk', 'Perimeter Exposure Risk', 'User Accessibility Gap', 'System Maintenance Overhead'],
+            datasets: [{ 
+                label: 'Framework Parameter Matrix Vector', 
+                data: [metrics.securityRisk, metrics.exposureRisk, metrics.accessibilityRisk, metrics.maintainabilityRisk], 
+                backgroundColor: isHighContrast ? 'rgba(255,255,0,0.2)' : 'rgba(99, 102, 241, 0.15)', 
+                borderColor: isHighContrast ? '#ffff00' : '#6366f1', 
+                borderWidth: 2 
+            }]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 10 } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 10, ticks: { display: false } } } }
     });
+}
+
+function handlePdfExportReport() {
+    const reportElement = document.getElementById('pdf-report-target');
+    const userEmail = pendingUserContext ? pendingUserContext.email : 'Authorized Workspace Analyst';
+    
+    const options = {
+        margin:       [0.4, 0.4],
+        filename:     `Framework_Equilibrium_Audit_${new Date().toISOString().split('T')[0]}.pdf`,
+        image:        { type: 'jpeg', quality: 0.99 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    const watermark = document.createElement('div');
+    watermark.innerHTML = `
+        <div style="border-bottom: 2px solid #6366f1; padding-bottom: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 16px; color: #0f172a; margin:0;">🛡️ Risk Management in Web Portal Framework Audit</h2>
+            <p style="font-size: 10px; color: #64748b; text-align: right; margin:0;">
+                <strong>Identity Context:</strong> ${userEmail}<br>
+                <strong>Execution Window:</strong> ${new Date().toLocaleString()}
+            </p>
+        </div>
+    `;
+    
+    reportElement.insertBefore(watermark, reportElement.firstChild);
+    html2pdf().set(options).from(reportElement).save().then(() => { reportElement.removeChild(watermark); });
 }

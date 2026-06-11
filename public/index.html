@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecurePortal - Strategic Risk Management Console</title>
+    <title>SecurePortal - Strategic Balance Console</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-app: #f8fafc; --bg-sidebar: #0f172a; --bg-card: #ffffff; --text-main: #0f172a;
@@ -19,7 +20,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-app); color: var(--text-main); min-height: 100vh; font-size: calc(16px * var(--font-scale)); }
         
         #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle, #EEF2FF 0%, #C7D2FE 100%); padding: 1rem; }
-        .auth-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 460px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .auth-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         .auth-card h2 { margin-bottom: 0.5rem; font-weight: 700; }
         .auth-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
 
@@ -27,15 +28,13 @@
         .google-btn:hover { background: #f9fafb; }
         .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 1rem 0; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
 
         .auth-step { display: none; }
         .auth-step.active { display: block; }
 
         #portal-container { display: none; min-height: 100vh; }
         aside { width: 260px; background-color: var(--bg-sidebar); color: #f1f5f9; display: flex; flex-direction: column; padding: 1.5rem; border-right: 1px solid var(--border); }
-        .brand { font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+        .brand { font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
         .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
         .nav-item { padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; color: #94a3b8; }
         .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: #fff; }
@@ -66,8 +65,9 @@
         .badge.low { background-color: var(--low); }
         .badge.medium { background-color: var(--medium); color: #000; }
         .badge.high { background-color: var(--high); }
-        .chart-frame { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
+        .chart-frame { position: relative; height: 320px; width: 100%; margin-top: 1rem; }
         .logout-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 0.4rem 0.8rem; font-size: 0.85rem; width: auto; margin-left: 1rem; }
+        .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); width: 100%; padding: 0.75rem; margin-top: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -76,36 +76,33 @@
         <div class="auth-card">
             
             <div id="step-gateway" class="auth-step active">
-                <h2>Welcome to SecurePortal</h2>
-                <p>Select your authorized enterprise login mechanism.</p>
+                <h2>SecurePortal Core</h2>
+                <p>Select your authorized authentication mechanism.</p>
                 <button class="google-btn" id="btn-google-login">
                     <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18" alt="Google"> Continue with Google Workspace
                 </button>
-                <div class="divider">or use identity credentials</div>
+                <div class="divider">or credentials</div>
                 <button style="margin-bottom:0.75rem;" id="to-login-btn">Sign In with Password</button>
                 <button style="background:transparent; color:var(--primary); border:1px solid var(--primary);" id="to-register-btn">Create Enterprise Account</button>
             </div>
 
             <div id="step-login" class="auth-step">
                 <h2>Sign In</h2>
-                <p>Enter your credentials below.</p>
                 <form id="loginForm">
                     <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" required></div>
                     <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
-                    <button type="submit" style="margin-bottom:1rem;">Authenticate</button>
-                    <button type="button" class="back-to-gateway" style="background:none; color:var(--text-muted); font-size:0.85rem;">← Back</button>
+                    <button type="submit">Authenticate</button>
+                    <button type="button" class="btn-secondary nav-back-trigger">← Return to Gateway</button>
                 </form>
             </div>
 
             <div id="step-register" class="auth-step">
                 <h2>Create Account</h2>
-                <p>Provision a new cryptographic risk manager profile.</p>
                 <form id="registerForm">
                     <div class="form-group"><label>Email Address</label><input type="email" id="regEmail" required></div>
                     <div class="form-group"><label>Password</label><input type="password" id="regPassword" required></div>
-                    <button type="submit" style="margin-bottom:1rem;">Sign Up & Continue</button>
-                    <div class="divider">Already have an account?</div>
-                    <button type="button" class="to-login-toggle" style="background:transparent; color:var(--primary); border:1px solid var(--primary);">Sign In with Existing Profile</button>
+                    <button type="submit">Sign Up & Continue</button>
+                    <button type="button" class="btn-secondary nav-back-trigger">← Return to Gateway</button>
                 </form>
             </div>
 
@@ -113,20 +110,36 @@
                 <h2>Profile Optimization</h2>
                 <p>Complete workspace context parameters.</p>
                 <form id="enrichmentForm">
-                    <div class="form-group"><label>Full Professional Name</label><input type="text" id="profName" required placeholder="John Doe"></div>
+                    <div class="form-group"><label>Full Professional Name</label><input type="text" id="profName" required placeholder="Meet Modi"></div>
                     <div class="form-group"><label>Enterprise Department / Role</label><select id="profRole"><option value="Risk Manager">Risk Manager / Analyst</option><option value="SecOps Administrator">SecOps Lead</option><option value="Compliance Auditor">Compliance Auditor</option></select></div>
-                    <button type="submit">Initialize Workstation</button>
+                    <button type="submit">Save & Proceed</button>
+                    <button type="button" class="btn-secondary nav-back-trigger">← Back</button>
                 </form>
             </div>
 
-            <div id="step-mfa" class="auth-step">
-                <h2>Multi-Factor Authentication</h2>
-                <p id="mfaPrompt">Enter the secondary verification token.</p>
+            <div id="step-mfa-choice" class="auth-step">
+                <h2>Enable Two-Factor Security?</h2>
+                <p>Add cryptographic verification steps using an authenticator app to protect portal configurations.</p>
+                <button type="button" id="mfa-opt-in" style="background-color: var(--primary); margin-bottom:0.5rem;">Yes, Setup 2FA Protection</button>
+                <button type="button" id="mfa-opt-out" style="background-color: transparent; border:1px solid var(--border); color:var(--text-main);">Skip for Now</button>
+                <button type="button" class="btn-secondary nav-back-trigger">← Back</button>
+            </div>
+
+            <div id="step-mfa-verify" class="auth-step">
+                <h2>Scan Security Token Matrix</h2>
+                <p id="mfaPrompt">Link your verification profile loop.</p>
+                
+                <div id="mfaSetupContainer" style="margin: 1.25rem 0; text-align:center;">
+                    <img id="mfaQrImage" src="" alt="Cryptographic Seed" style="border: 1px solid var(--border); padding: 0.5rem; border-radius: 8px; background:#fff;">
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem;">Key: <code id="mfaManualKey"></code></p>
+                </div>
+
                 <form id="mfaForm">
                     <div class="form-group" style="text-align:center;">
-                        <input type="text" id="mfaCode" maxlength="6" style="font-size:1.75rem; letter-spacing:0.5rem; text-align:center; width:180px;" placeholder="000000" required>
+                        <input type="text" id="mfaCode" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" style="font-size:1.75rem; letter-spacing:0.5rem; text-align:center; width:180px;" placeholder="000000" required>
                     </div>
-                    <button type="submit" style="margin-top:1rem;">Verify Identity Code</button>
+                    <button type="submit">Verify Code and Complete Setup</button>
+                    <button type="button" class="btn-secondary nav-back-trigger">← Back</button>
                 </form>
             </div>
 
@@ -135,71 +148,112 @@
 
     <div id="portal-container">
         <aside>
-            <div class="brand">🛡️ SecurePortal</div>
+            <div class="brand">🛡️ Framework Console</div>
             <ul class="nav-links">
                 <li class="nav-item active" data-view="dashboard">Dashboard</li>
-                <li class="nav-item" data-view="risk-engine">Risk Assessment</li>
-                <li class="nav-item" data-view="audit-logs">Security Audits</li>
+                <li class="nav-item" data-view="risk-engine">Simulation Deck</li>
+                <li class="nav-item" data-view="audit-logs">Audit Logs</li>
                 <li class="nav-item" data-view="accessibility">Accessibility Suite</li>
             </ul>
         </aside>
 
         <main>
             <header>
-                <div><h2 id="view-title" style="font-weight: 700; font-size: 1.5rem;">User Dashboard (Dynamic)</h2></div>
+                <div><h2 id="view-title" style="font-weight: 700; font-size: 1.4rem;">User Dashboard</h2></div>
                 <div class="user-profile">
                     <div class="toggle-container"><label for="contrastToggle">High Contrast</label><input type="checkbox" id="contrastToggle"></div>
-                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Resolving Identity Profile...</span>
+                    <span id="userDisplayName" style="font-size: 0.9rem; font-weight: 600;">Resolving...</span>
                     <button class="logout-btn" id="logoutBtn">Log Out</button>
                 </div>
             </header>
 
             <div class="view-content">
                 <div id="view-dashboard" class="view-module active">
-                    <div class="dashboard-grid">
-                        <div><div class="card"><h3>Active System Risks Matrix</h3><div class="chart-frame"><canvas id="radarChart"></canvas></div></div></div>
-                        <div><div class="card"><h3>Key Metrics</h3><div style="margin: 1.5rem 0;"><p style="color: var(--text-muted); font-size: 0.85rem;">Overall Risk Engine Score</p><h1 id="dash-score" style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">--</h1></div><div><p style="color: var(--text-muted); font-size: 0.85rem;">Accessibility–Security Balance Index</p><h2 id="dash-balance" style="font-weight: 700;">--</h2></div></div></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Portal Equilibrium Matrix</h4>
+                        <button id="exportPdfBtn" style="width: auto; background-color: #0f172a; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                            📄 Export Executive Audit (PDF)
+                        </button>
+                    </div>
+
+                    <div id="pdf-report-target" style="padding: 10px;">
+                        <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Risk Management Framework Analysis Area</h4>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4;">
+                                Balanced model tracing quantitative system accessibility compliance flags vs core data perimeter protection controls.
+                            </p>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <div>
+                                <div class="card" style="height: 100%;">
+                                    <h3>Core Framework Vector Mappings</h3>
+                                    <div class="chart-frame"><canvas id="radarChart"></canvas></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="card" style="margin-bottom: 1.5rem;">
+                                    <h3>Data Integrity Metrics</h3>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                        <div>
+                                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Aggregate Security Risk</p>
+                                            <h1 id="dash-score" style="font-size: 2.2rem; font-weight: 800; color: var(--high); margin: 0;">--</h1>
+                                        </div>
+                                        <div style="text-align: right;"><span class="badge" id="dash-tier-badge">Awaiting Sync</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <h3>Equilibrium Compliance Index</h3>
+                                    <div style="margin-bottom: 1rem;">
+                                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Balance Index Level</p>
+                                        <h2 id="dash-balance" style="font-size: 2rem; font-weight: 800; color: var(--low); margin: 0;">--</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div id="view-risk-engine" class="view-module">
                     <div class="card" style="max-width: 700px; margin: 0 auto;">
-                        <h2>Execute Framework Parameters Engine</h2>
+                        <h2>Dynamic Simulator Control Deck</h2>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">Tweak portal settings to run predictive tradeoff mapping algorithms.</p>
                         <form id="metricsForm">
-                            <div class="form-group"><label>Portal Type</label><select id="portalType"><option value="1">Corporate Intranet</option><option value="2">Hybrid Portal</option><option value="3">Public Portal</option></select></div>
-                            <div class="form-group"><label>Authentication Method</label><select id="authMethod"><option value="1">SSO Enforced</option><option value="2">MFA Enforced</option><option value="3">Single-Factor</option></select></div>
-                            <div class="form-group"><label>User Access Authorization</label><select id="accessLevels"><option value="1">Flat Schema</option><option value="2">Role-Based (RBAC)</option><option value="3">Attribute-Based (ABAC)</option></select></div>
-                            <div class="form-group"><label>Content Evolution Rate</label><select id="updateFrequency"><option value="1">Static State Framework</option><option value="2">Daily Updates</option><option value="3">Real-time Asynchronous UGC</option></select></div>
-                            <div class="form-group"><label>Data Sensitivity Classification</label><select id="dataSensitivity"><option value="1">Public Core Assets</option><option value="2">Internal Proprietary</option><option value="3">Restricted PII Fields</option></select></div>
-                            <div class="form-group"><label>Patch Pipeline Recurrence</label><select id="patchManagement"><option value="1">Continuous DevSecOps</option><option value="2">Scheduled Monthly</option><option value="3">Ad-hoc Patch Cycles</option></select></div>
-                            <div class="form-group"><label>Accessibility Compliance Targets</label><select id="wcagLevel"><option value="1">WCAG 2.1 AAA</option><option value="2">WCAG 2.1 AA</option><option value="3">WCAG 2.1 A Baseline</option></select></div>
+                            <div class="form-group"><label>Portal Environment Visibility Scope</label><select id="portalType"><option value="1">Corporate Intranet (Internal Network Only)</option><option value="2">Hybrid Gateway Portal</option><option value="3">Public Facing Web Portal Space</option></select></div>
+                            <div class="form-group"><label>Authentication Integrity Strictness</label><select id="authMethod"><option value="1">Federated SSO Identity Token Enforced</option><option value="2">Multi-Factor Authenticator Enforced</option><option value="3">Single-Factor Password Framework</option></select></div>
+                            <div class="form-group"><label>User Authorization Architecture Schema</label><select id="accessLevels"><option value="1">Flat Unified User Mapping</option><option value="2">Role-Based Access Controls (RBAC)</option><option value="3">Attribute-Based Context Controls (ABAC)</option></select></div>
+                            <div class="form-group"><label>Content Dynamic Evolution Rate</label><select id="updateFrequency"><option value="1">Static Read-Only Framework Pages</option><option value="2">Scheduled Batched Daily Sync Runs</option><option value="3">Real-time Asynchronous Content Buffers</option></select></div>
+                            <div class="form-group"><label>Data Sensitivity Asset Classification</label><select id="dataSensitivity"><option value="1">Public Facing Core Text Fields</option><option value="2">Internal Private Proprietary Logs</option><option value="3">Restricted PII / Financial Data Fields</option></select></div>
+                            <div class="form-group"><label>Patch Maintenance Pipeline</label><select id="patchManagement"><option value="1">Continuous Integrated DevSecOps Loops</option><option value="2">Scheduled Monthly Manual Maintenance Window</option><option value="3">Ad-Hoc Reactive Fix Runs</option></select></div>
+                            <div class="form-group"><label>User Accessibility Compliance Targets (WCAG)</label><select id="wcagLevel"><option value="1">WCAG 2.1 Level AAA Compliance Standard</option><option value="2">WCAG 2.1 Level AA Industry Standard</option><option value="3">WCAG 2.1 Level A Baseline Requirements</option></select></div>
                             <div class="form-group" style="margin-bottom: 2rem;">
-                                <label style="margin-bottom: 0.5rem;">Active Perimeter Hardening Controls</label>
+                                <label style="margin-bottom: 0.5rem;">Active Perimeter Security Hardening Controls</label>
                                 <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                                    <label style="font-weight:normal;"><input type="checkbox" id="waf" checked> Web Application Firewall (WAF)</label>
-                                    <label style="font-weight:normal;"><input type="checkbox" id="logging" checked> Immutable Audit Logging Tracks</label>
-                                    <label style="font-weight:normal;"><input type="checkbox" id="encryption"> Transparent Table Encryption (TDE)</label>
+                                    <label style="font-weight:normal;"><input type="checkbox" id="waf" checked> Edge Web Application Firewall (WAF)</label>
+                                    <label style="font-weight:normal;"><input type="checkbox" id="logging" checked> Immutable System Activity Logs</label>
+                                    <label style="font-weight:normal;"><input type="checkbox" id="encryption"> Row-Level Transparent Database Encryption (TDE)</label>
                                 </div>
                             </div>
-                            <button type="button" id="executeDiagnosticsBtn">Run Diagnostics & Save</button>
+                            <button type="button" id="executeDiagnosticsBtn">Run Simulation Calculations & Save</button>
                         </form>
                     </div>
                 </div>
 
                 <div id="view-audit-logs" class="view-module">
                     <div class="card">
-                        <h3>Your Secure Workspace Diagnostic Log Stream</h3>
+                        <h3>Simulation History Execution Logs</h3>
                         <table>
-                            <thead><tr><th>Execution Timestamp</th><th>Aggregate Assessment Score</th><th>Risk Allocation Rating</th><th>Balance Equilibrium Index</th></tr></thead>
-                            <tbody id="cloudLogsTable"><tr><td colspan="4" style="color: var(--text-muted);">Awaiting network authorization pipeline sync...</td></tr></tbody>
+                            <thead><tr><th>Execution Timestamp</th><th>Data Integrity Score</th><th>Threat Risk Level</th><th>Balance Equilibrium Level</th></tr></thead>
+                            <tbody id="cloudLogsTable"><tr><td colspan="4" style="color: var(--text-muted);">Syncing log streams...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="view-accessibility" class="view-module">
                     <div class="card" style="max-width: 600px;">
-                        <h2>Interactive Accessibility Configurations</h2>
-                        <div class="form-group"><label>Dynamic Interface Display Text Scale</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler"></div>
+                        <h2>Interactive Accessibility Suite</h2>
+                        <div class="form-group"><label>Dynamic Text Display Scaling Engine</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler"></div>
                     </div>
                 </div>
             </div>
