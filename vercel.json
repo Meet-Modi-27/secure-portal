@@ -6,5 +6,6 @@
     { "source": "/api/get-profile", "destination": "/api/get-profile.js" },
     { "source": "/api/generate-2fa", "destination": "/api/generate-2fa.js" },
     { "source": "/api/verify-2fa", "destination": "/api/verify-2fa.js" }
+    
   ]
 }
