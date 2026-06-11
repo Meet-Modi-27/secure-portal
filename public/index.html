@@ -50,7 +50,7 @@
 
         .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1.2fr 1fr; } }
+        @media (min-width: 1140px) { .dashboard-grid { grid-template-columns: 1.3fr 1fr; } }
 
         .form-group { margin-bottom: 1.25rem; text-align: left; }
         label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.85rem; }
@@ -65,7 +65,7 @@
         .badge.low { background-color: var(--low); }
         .badge.medium { background-color: var(--medium); color: #000; }
         .badge.high { background-color: var(--high); }
-        .chart-frame { position: relative; height: 320px; width: 100%; margin-top: 1rem; }
+        .chart-frame { position: relative; height: 380px; width: 100%; margin-top: 1rem; }
         .logout-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 0.4rem 0.8rem; font-size: 0.85rem; width: auto; margin-left: 1rem; }
         .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); width: 100%; padding: 0.75rem; margin-top: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
     </style>
@@ -168,15 +168,17 @@
             </header>
 
             <div class="view-content">
+                
                 <div id="view-dashboard" class="view-module active">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h4 style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Portal Equilibrium Matrix</h4>
+                        <h4 style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Portal Equilibrium Matrix</h4>
                         <button id="exportPdfBtn" style="width: auto; background-color: #0f172a; padding: 0.5rem 1rem; font-size: 0.85rem;">
                             📄 Export Executive Audit (PDF)
                         </button>
                     </div>
 
-                    <div id="pdf-report-target" style="padding: 10px;">
+                    <div id="pdf-report-target" style="padding: 10px; background-color: transparent;">
+                        
                         <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
                             <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Risk Management Framework Analysis Area</h4>
                             <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4;">
@@ -187,27 +189,61 @@
                         <div class="dashboard-grid">
                             <div>
                                 <div class="card" style="height: 100%;">
-                                    <h3>Core Framework Vector Mappings</h3>
+                                    <h3>10-Axis Framework Alignment Spectrum</h3>
                                     <div class="chart-frame"><canvas id="radarChart"></canvas></div>
                                 </div>
                             </div>
+                            
                             <div>
-                                <div class="card" style="margin-bottom: 1.5rem;">
-                                    <h3>Data Integrity Metrics</h3>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <div class="card" style="margin-bottom: 1.25rem;">
+                                    <h3>System Security Posture</h3>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
                                         <div>
-                                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Aggregate Security Risk</p>
+                                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Aggregate Risk Index</p>
                                             <h1 id="dash-score" style="font-size: 2.2rem; font-weight: 800; color: var(--high); margin: 0;">--</h1>
                                         </div>
-                                        <div style="text-align: right;"><span class="badge" id="dash-tier-badge">Awaiting Sync</span></div>
+                                        <div style="text-align: right;"><span class="badge" id="dash-tier-badge">Calculating</span></div>
                                     </div>
                                 </div>
 
-                                <div class="card">
-                                    <h3>Equilibrium Compliance Index</h3>
-                                    <div style="margin-bottom: 1rem;">
-                                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Balance Index Level</p>
+                                <div class="card" style="margin-bottom: 1.25rem;">
+                                    <h3>Framework Cohesion Score</h3>
+                                    <div style="margin-top: 0.5rem;">
+                                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Equilibrium Index Level</p>
                                         <h2 id="dash-balance" style="font-size: 2rem; font-weight: 800; color: var(--low); margin: 0;">--</h2>
+                                    </div>
+                                </div>
+
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                                    <div class="card" style="margin:0; padding:1rem;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase;">Data Leak Exposure (DLEI)</p>
+                                        <h3 id="dash-leak" style="font-size:1.4rem; font-weight:800; margin-top:0.25rem;">--</h3>
+                                    </div>
+                                    <div class="card" style="margin:0; padding:1rem;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase;">Assistive Friction (AFC)</p>
+                                        <h3 id="dash-friction" style="font-size:1.4rem; font-weight:800; margin-top:0.25rem;">--</h3>
+                                    </div>
+                                    <div class="card" style="margin:0; padding:1rem;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase;">Interoperability Loss (AIDI)</p>
+                                        <h3 id="dash-aidi" style="font-size:1.4rem; font-weight:800; margin-top:0.25rem; color:var(--high);">--</h3>
+                                    </div>
+                                    <div class="card" style="margin:0; padding:1rem;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase;">Cryptographic Lag (CPOR)</p>
+                                        <h3 id="dash-cpor" style="font-size:1.4rem; font-weight:800; margin-top:0.25rem; color:var(--medium);">--</h3>
+                                    </div>
+                                </div>
+
+                                <div class="card" style="margin:0; padding:1rem; margin-bottom:1rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; margin:0;">Timeout Hazard Exclusions (SIHP)</p>
+                                        <h3 id="dash-sihp" style="font-size:1.4rem; font-weight:800; margin:0; color:var(--high);">--</h3>
+                                    </div>
+                                </div>
+
+                                <div class="card" style="margin:0; padding:1rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <p style="color: var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; margin:0;">WCAG Compliance Delta Variance (CDI)</p>
+                                        <h3 id="dash-compliance-delta" style="font-size:1.4rem; font-weight:800; margin:0; color:var(--primary);">--</h3>
                                     </div>
                                 </div>
                             </div>
@@ -216,19 +252,26 @@
                 </div>
 
                 <div id="view-risk-engine" class="view-module">
-                    <div class="card" style="max-width: 700px; margin: 0 auto;">
+                    <div class="card" style="max-width: 780px; margin: 0 auto;">
                         <h2>Dynamic Simulator Control Deck</h2>
-                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">Tweak portal settings to run predictive tradeoff mapping algorithms.</p>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">Adjust parameters to test system threshold calculations.</p>
                         <form id="metricsForm">
-                            <div class="form-group"><label>Portal Environment Visibility Scope</label><select id="portalType"><option value="1">Corporate Intranet (Internal Network Only)</option><option value="2">Hybrid Gateway Portal</option><option value="3">Public Facing Web Portal Space</option></select></div>
-                            <div class="form-group"><label>Authentication Integrity Strictness</label><select id="authMethod"><option value="1">Federated SSO Identity Token Enforced</option><option value="2">Multi-Factor Authenticator Enforced</option><option value="3">Single-Factor Password Framework</option></select></div>
-                            <div class="form-group"><label>User Authorization Architecture Schema</label><select id="accessLevels"><option value="1">Flat Unified User Mapping</option><option value="2">Role-Based Access Controls (RBAC)</option><option value="3">Attribute-Based Context Controls (ABAC)</option></select></div>
-                            <div class="form-group"><label>Content Dynamic Evolution Rate</label><select id="updateFrequency"><option value="1">Static Read-Only Framework Pages</option><option value="2">Scheduled Batched Daily Sync Runs</option><option value="3">Real-time Asynchronous Content Buffers</option></select></div>
-                            <div class="form-group"><label>Data Sensitivity Asset Classification</label><select id="dataSensitivity"><option value="1">Public Facing Core Text Fields</option><option value="2">Internal Private Proprietary Logs</option><option value="3">Restricted PII / Financial Data Fields</option></select></div>
-                            <div class="form-group"><label>Patch Maintenance Pipeline</label><select id="patchManagement"><option value="1">Continuous Integrated DevSecOps Loops</option><option value="2">Scheduled Monthly Manual Maintenance Window</option><option value="3">Ad-Hoc Reactive Fix Runs</option></select></div>
-                            <div class="form-group"><label>User Accessibility Compliance Targets (WCAG)</label><select id="wcagLevel"><option value="1">WCAG 2.1 Level AAA Compliance Standard</option><option value="2">WCAG 2.1 Level AA Industry Standard</option><option value="3">WCAG 2.1 Level A Baseline Requirements</option></select></div>
-                            <div class="form-group" style="margin-bottom: 2rem;">
-                                <label style="margin-bottom: 0.5rem;">Active Perimeter Security Hardening Controls</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
+                                <div class="form-group"><label>Portal Environment Visibility Scope</label><select id="portalType"><option value="1">Intranet Namespace (Internal Network Only)</option><option value="2">Hybrid Gateway Portal</option><option value="3">Public Facing Web Portal Space</option></select></div>
+                                <div class="form-group"><label>Authentication Integrity Strictness</label><select id="authMethod"><option value="1">Federated SSO Identity Token</option><option value="2">Multi-Factor Authenticator Enforced</option><option value="3">Single-Factor Password Framework</option></select></div>
+                                <div class="form-group"><label>User Authorization Architecture</label><select id="accessLevels"><option value="1">Flat Unified User Mapping</option><option value="2">Role-Based Access Controls (RBAC)</option><option value="3">Attribute-Based Context Controls (ABAC)</option></select></div>
+                                <div class="form-group"><label>Content Dynamic Evolution Rate</label><select id="updateFrequency"><option value="1">Static Read-Only Framework Pages</option><option value="2">Scheduled Batched Daily Sync Runs</option><option value="3">Real-time Asynchronous Buffers</option></select></div>
+                                <div class="form-group"><label>Data Sensitivity Classification</label><select id="dataSensitivity"><option value="1">Public Core Text Fields</option><option value="2">Internal Private Logs</option><option value="3">Restricted PII / Financial Data Fields</option></select></div>
+                                <div class="form-group"><label>Patch Maintenance Pipeline</label><select id="patchManagement"><option value="1">Continuous DevSecOps Loops</option><option value="2">Scheduled Monthly Windows</option><option value="3">Ad-Hoc Reactive Fix Runs</option></select></div>
+                                <div class="form-group"><label>Accessibility Compliances (WCAG)</label><select id="wcagLevel"><option value="1">WCAG 2.1 Level AAA Standard</option><option value="2">WCAG 2.1 Level AA Standard</option><option value="3">WCAG 2.1 Level A Baseline Requirements</option></select></div>
+                                
+                                <div class="form-group"><label>Session Integrity Timeout Windows</label><select id="sessionTimeout"><option value="3">Aggressive Exclusions (Strict 5-Min Limit)</option><option value="2">Standard Security Limits (30-Min Window)</option><option value="1">Adaptive Extended/Infinite Sessions</option></select></div>
+                                <div class="form-group"><label>Assistive Tech Optimization Overrides</label><select id="ariaOptimization"><option value="1">Explicit ARIA Landmark & Focus Traps Configured</option><option value="2">Standard Native Semantic Elements Only</option><option value="3">Non-Semantic/Obfuscated Unlabeled Div Blocks</option></select></div>
+                                <div class="form-group"><label>Network Security Perimeter Hardening</label><select id="perimeterHardening"><option value="3">Zero-Trust Deep Packet Rate Limiting</option><option value="2">Standard Edge IP Blocklist/Allowlists</option><option value="1">Open Pipeline Gateway Architecture</option></select></div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 2rem;">
+                                <label style="margin-bottom: 0.5rem; font-weight:700;">Active Perimeter Security Hardening Controls</label>
                                 <div style="display:flex; flex-direction:column; gap:0.5rem;">
                                     <label style="font-weight:normal;"><input type="checkbox" id="waf" checked> Edge Web Application Firewall (WAF)</label>
                                     <label style="font-weight:normal;"><input type="checkbox" id="logging" checked> Immutable System Activity Logs</label>
@@ -256,6 +299,7 @@
                         <div class="form-group"><label>Dynamic Text Display Scaling Engine</label><input type="range" min="0.8" max="1.4" step="0.1" value="1" id="textScaler"></div>
                     </div>
                 </div>
+
             </div>
         </main>
     </div>

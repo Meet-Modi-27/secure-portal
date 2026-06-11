@@ -222,6 +222,12 @@ async function submitAssessmentData() {
         dataSensitivity: parseInt(document.getElementById('dataSensitivity').value),
         patchManagement: parseInt(document.getElementById('patchManagement').value),
         wcagLevel: parseInt(document.getElementById('wcagLevel').value),
+        
+        // Bundle 2026 Core Input Metrics
+        sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+        ariaOptimization: parseInt(document.getElementById('ariaOptimization').value),
+        perimeterHardening: parseInt(document.getElementById('perimeterHardening').value),
+        
         controls: {
             waf: document.getElementById('waf').checked,
             logging: document.getElementById('logging').checked,
@@ -255,6 +261,15 @@ function renderDashboardVisuals(metrics) {
     document.getElementById('dash-score').innerText = `${metrics.overallScore.toFixed(1)} / 10`;
     document.getElementById('dash-balance').innerText = `${metrics.balanceIndex} / 100`;
     
+    document.getElementById('dash-leak').innerText = `${parseFloat(metrics.leakExposure || 0).toFixed(1)} / 10`;
+    document.getElementById('dash-friction').innerText = `${parseFloat(metrics.assistiveFriction || 0).toFixed(1)} / 10`;
+    document.getElementById('dash-compliance-delta').innerText = `${parseFloat(metrics.complianceDelta || 0).toFixed(1)} / 10`;
+    
+    // Inject New UI Text Label Nodes
+    document.getElementById('dash-aidi').innerText = `${parseFloat(metrics.assistiveInteroperability || 0).toFixed(1)} / 10`;
+    document.getElementById('dash-cpor').innerText = `${parseFloat(metrics.cryptoOverhead || 0).toFixed(1)} / 10`;
+    document.getElementById('dash-sihp').innerText = `${parseFloat(metrics.sessionHazard || 0).toFixed(1)} / 10`;
+    
     const badge = document.getElementById('dash-tier-badge');
     if (badge) {
         badge.innerText = `${metrics.tier} Risk Tier`;
@@ -268,16 +283,40 @@ function renderDashboardVisuals(metrics) {
     radarChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Data Integrity Risk', 'Perimeter Exposure Risk', 'User Accessibility Gap', 'System Maintenance Overhead'],
+            labels: [
+                'Data Integrity Risk', 'Perimeter Exposure Risk', 'User Accessibility Gap', 'System Maintenance Overhead',
+                'Data Leak Exposure (DLEI)', 'Assistive Friction (AFC)', 'Compliance Delta (CDI)',
+                'Interoperability Loss (AIDI)', 'Cryptographic Lag (CPOR)', 'Timeout Exclusions (SIHP)'
+            ],
             datasets: [{ 
-                label: 'Framework Parameter Matrix Vector', 
-                data: [metrics.securityRisk, metrics.exposureRisk, metrics.accessibilityRisk, metrics.maintainabilityRisk], 
-                backgroundColor: isHighContrast ? 'rgba(255,255,0,0.2)' : 'rgba(99, 102, 241, 0.15)', 
+                label: 'Framework Parameter Spectrum Spectrum', 
+                data: [
+                    metrics.securityRisk, metrics.exposureRisk, metrics.accessibilityRisk, metrics.maintainabilityRisk,
+                    metrics.leakExposure || 0, metrics.assistiveFriction || 0, metrics.complianceDelta || 0,
+                    metrics.assistiveInteroperability || 0, metrics.cryptoOverhead || 0, metrics.sessionHazard || 0
+                ], 
+                backgroundColor: isHighContrast ? 'rgba(255,255,0,0.2)' : 'rgba(99, 102, 241, 0.12)', 
                 borderColor: isHighContrast ? '#ffff00' : '#6366f1', 
-                borderWidth: 2 
+                borderWidth: 2,
+                pointBackgroundColor: isHighContrast ? '#ffff00' : '#4f46e5'
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 10, ticks: { display: false } } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                r: { 
+                    suggestedMin: 0, suggestedMax: 10, ticks: { display: false },
+                    grid: { color: isHighContrast ? '#ffffff' : '#e2e8f0' },
+                    angleLines: { color: isHighContrast ? '#ffffff' : '#e2e8f0' },
+                    pointLabels: {
+                        color: isHighContrast ? '#ffffff' : '#475569',
+                        font: { size: 9, weight: '600' }
+                    }
+                } 
+            },
+            plugins: { legend: { display: false } }
+        }
     });
 }
 
