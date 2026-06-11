@@ -20,6 +20,12 @@ export default async function handler(req, res) {
         const doc = await db.collection('users').doc(decoded.uid).get();
         if(!doc.exists) return res.status(200).json({ initialized: false });
         
-        return res.status(200).json(doc.data());
+        const data = doc.data();
+        return res.status(200).json({
+            name: data.name,
+            role: data.role,
+            initialized: data.initialized || false,
+            twoFactorEnabled: data.twoFactorEnabled || false
+        });
     } catch (err) { return res.status(500).json({ error: err.message }); }
 }
