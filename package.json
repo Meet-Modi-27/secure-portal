@@ -10,8 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^12.14.0",
-    "firebase-admin": "^14.0.0",
-    "otplib": "^13.4.1"
+    "firebase-admin": "^12.0.0",
+    "firebase": "^11.0.0",
+    "otplib": "^12.0.1"
   }
 }
